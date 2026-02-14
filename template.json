@@ -1,0 +1,126 @@
+{
+  "name": "BookLore",
+  "description": "Self-hosted digital library with smart shelves, auto metadata, device sync, and built-in reader for EPUB, PDF, and comics",
+  "icon": "https://raw.githubusercontent.com/booklore-app/booklore/develop/assets/logo%20with%20text.svg",
+  "services": [
+    {
+      "name": "BookLore",
+      "type": "web",
+      "icon": "https://raw.githubusercontent.com/booklore-app/booklore/develop/assets/logo%20with%20text.svg",
+      "source": {
+        "image": "booklore/booklore:latest"
+      },
+      "env": {
+        "USER_ID": {
+          "description": "User ID for file permissions",
+          "default": "1000"
+        },
+        "GROUP_ID": {
+          "description": "Group ID for file permissions",
+          "default": "1000"
+        },
+        "TZ": {
+          "description": "Timezone",
+          "default": "Etc/UTC"
+        },
+        "DATABASE_URL": {
+          "description": "Database connection URL",
+          "value": "jdbc:mariadb://${{MariaDB.RAILWAY_PRIVATE_DOMAIN}}:3306/booklore"
+        },
+        "DATABASE_USERNAME": {
+          "description": "Database username",
+          "value": "${{MariaDB.MYSQL_USER}}"
+        },
+        "DATABASE_PASSWORD": {
+          "description": "Database password",
+          "value": "${{MariaDB.MYSQL_PASSWORD}}"
+        },
+        "DISK_TYPE": {
+          "description": "Storage type (LOCAL or NETWORK)",
+          "default": "LOCAL"
+        }
+      },
+      "volumes": [
+        {
+          "mountPath": "/app/data",
+          "name": "booklore-data"
+        },
+        {
+          "mountPath": "/books",
+          "name": "booklore-books"
+        },
+        {
+          "mountPath": "/bookdrop",
+          "name": "booklore-bookdrop"
+        }
+      ],
+      "healthcheck": {
+        "path": "/api/v1/healthcheck",
+        "interval": 60,
+        "timeout": 10
+      },
+      "deploy": {
+        "numReplicas": 1,
+        "sleepApplication": false,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    },
+    {
+      "name": "MariaDB",
+      "type": "database",
+      "icon": "https://railway.app/icons/mariadb.svg",
+      "source": {
+        "image": "lscr.io/linuxserver/mariadb:11.4.5"
+      },
+      "env": {
+        "PUID": {
+          "description": "User ID",
+          "default": "1000"
+        },
+        "PGID": {
+          "description": "Group ID",
+          "default": "1000"
+        },
+        "TZ": {
+          "description": "Timezone",
+          "default": "Etc/UTC"
+        },
+        "MYSQL_ROOT_PASSWORD": {
+          "description": "MariaDB root password",
+          "generate": "password"
+        },
+        "MYSQL_DATABASE": {
+          "description": "Database name",
+          "default": "booklore"
+        },
+        "MYSQL_USER": {
+          "description": "Database user",
+          "default": "booklore"
+        },
+        "MYSQL_PASSWORD": {
+          "description": "Database password",
+          "generate": "password"
+        }
+      },
+      "volumes": [
+        {
+          "mountPath": "/config",
+          "name": "mariadb-data"
+        }
+      ],
+      "healthcheck": {
+        "command": ["mariadb-admin", "ping", "-h", "localhost"],
+        "interval": 5,
+        "timeout": 5,
+        "retries": 10
+      },
+      "deploy": {
+        "numReplicas": 1,
+        "sleepApplication": false,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    }
+  ]
+}
